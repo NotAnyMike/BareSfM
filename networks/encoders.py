@@ -77,25 +77,46 @@ class ResNet_layer(nn.Model):
 
         return x
 
-def conv2d(ch_in, ch_out, kernel_size=3, stride=2, padding=1, dilatation=1):
-    return nn.Conv2d(ch_in, ch_out, kernel_size, stride, padding, dilatation, bias=False)
-
 
 class U_net(nn.Model):
-    """ Based on ResNet 18, but not using the pretrained network on pytorch hub """
-    def __init__(self):
+    """
+    Based on ResNet 18, but not using the pretrained network on pytorch hub.
+    Can be considered a simplified version of resnet18.
+    We are not using any normalisation layer
+    """
+    def __init__(self, num_layers=4, output_size=1000):
+        self.num_layers = num_layers
+        self.output_size = output_size
+
         # few layers following ResNet 18
-        self.layers = []
+        self.layers = OrderedDict()
 
-        self.maxpool = nn.MaxPool2d(3, 2)
+        self.maxpool = lambda: nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        layer = nn.Conv2d(3, 64, 7, 2)
-        self.layers.append(layer)
-        for layer_num in range(1,5):
-            layer = nn.Conv2d()
-            self.layers.append(layer)
+        ch_in, ch_out = 3, 64
+
+        self.layers['conv0'] = nn.Conv2d(ch_in, ch_out, 7, 2)
+        self.layers['relu0'] = nn.Relu(inplace=False)
+        self.layers['maxpool0'] = self.maxpool()
+        for layer_num in range(self.num_layers):
+            ch_in = ch_out
+            ch_out *= 2
+
+            layer = ResNet_layer(ch_in, ch_out, 3, 2)
+            self.layers['layer%i' % (layer_num + 1)] = layer
+
+        self.layers['avgpool'] = nn.AdaptiveAvgPool2d((1, 1))
+        self.layers['fc'] = nn.Linear(ch_out, self.output_size)
 
     def forward(self, x):
-        """ returns four outputs """
-        x = self.maxpool(x)
-        raise NotImplementedError
+        """
+        Returns self.num_layers outputs 
+        From last to first. THe first element returned is the last layer.
+        """
+        outputs = []
+        for key, opt in self.layers.items():
+            x = opt(x)
+            if 'layer' in key:
+                outputs.append(x)
+        outputs[-1] = x # the last layer has more opt to pass through
+        return outputs[::-1]
