@@ -1,7 +1,7 @@
 import numpy as np
 from pdb import set_trace
 
-from dataloaders import Shapes3D_loader, read_lines, parse_digits
+from dataloaders import Shapes3D_loader, read_lines, parse_lines
 
 def test_read_lines():
     lines = read_lines("test/train_files.txt")
@@ -13,6 +13,6 @@ def test_shapes3d_dataloader():
     assert dl.files == [(1, 2), (3, 4)]
     assert np.array_equal(dl.K, K)
 
-def test_parse_digits():
+def test_parse_lines():
     correct = [(1., 2.), (2., 3., 3.,)]
-    assert parse_digits(["1 2", "2 3 3"],float) == correct
+    assert parse_liness(["1 2", "2 3 3"],float) == correct
