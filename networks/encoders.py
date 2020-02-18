@@ -66,7 +66,7 @@ class ResNet_layer(nn.Module):
         self.conv1x1 = nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=2, padding=0)
         self.relu = lambda: nn.ReLU(inplace=False)
 
-        for d in range(depth):
+        for d in range(1, depth + 1):
             # The last one has to have a connection before reluing
             if d == 0:
                 self.opts['downconv%i' % d] = self.downconv(ch_in, self.ch_out)
@@ -97,10 +97,9 @@ class U_net(nn.Module):
     Can be considered a simplified version of resnet18.
     We are not using any normalisation layer
     """
-    def __init__(self, num_layers=4, output_size=1000):
+    def __init__(self, num_layers=4):
         super(U_net, self).__init__()
         self.num_layers = num_layers
-        self.output_size = output_size
 
         # few layers following ResNet 18
         self.layers = OrderedDict()
