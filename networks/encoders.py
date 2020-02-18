@@ -1,3 +1,4 @@
+from pdb import set_trace
 from collections import OrderedDict
 import torch
 import torch.nn as nn
@@ -31,7 +32,7 @@ class ResNet(nn.Module):
         return x, x3, x2, x1
 
 
-class ResNet_layer(nn.Model):
+class ResNet_layer(nn.Module):
     """
     Basic Layer of a resnet
 
@@ -48,43 +49,56 @@ class ResNet_layer(nn.Model):
         self.depth = depth
         self.stride = 2
         self.padding = 1
-        self.dilatation = 1
+        self.dilation = 1
         self.opts = OrderedDict()
 
-        self.conv_fn = lambda c_in, c_out: nn.Conv2d(
+        self.downconv = lambda c_in, c_out: nn.Conv2d(
             c_in, c_out,
             kernel_size=self.kernel_size,
             stride=self.stride,
             padding=self.padding,
+            dilation=self.dilation,
             bias=False)
-        self.relu_fn = lambda: nn.ReLU(inplace=False)
+        self.conv = lambda c_in, c_out: nn.Conv2d(
+            c_in, c_out,
+            kernel_size=self.kernel_size,
+            stride=1, padding=1, dilation=1, bias=False)
+        self.conv1x1 = nn.Conv2d(ch_in, ch_out, kernel_size=1, stride=2, padding=0)
+        self.relu = lambda: nn.ReLU(inplace=False)
 
         for d in range(depth):
-            self.opts['conv%i' % d] = self.conv_fn(ch_in, self.ch_out)
+            # The last one has to have a connection before reluing
+            if d == 0:
+                self.opts['downconv%i' % d] = self.downconv(ch_in, self.ch_out)
+            else:
+                self.opts['conv%i' % d] = self.conv(ch_in, self.ch_out)
+
             if d+1 != depth:
-                self.opts['relu%i' % d] = self.relu_fn()
+                self.opts['relu%i' % d] = self.relu()
+
             ch_in = self.ch_out
 
         self.model = nn.Sequential(self.opts)
 
     def forward(self, x):
-        identity = x
+        identity = self.conv1x1(x)
 
         x = self.model(x)
 
         x = x + identity
-        x = self.relu(x)
+        x = self.relu()(x)
 
         return x
 
 
-class U_net(nn.Model):
+class U_net(nn.Module):
     """
     Based on ResNet 18, but not using the pretrained network on pytorch hub.
     Can be considered a simplified version of resnet18.
     We are not using any normalisation layer
     """
     def __init__(self, num_layers=4, output_size=1000):
+        super(U_net, self).__init__()
         self.num_layers = num_layers
         self.output_size = output_size
 
@@ -95,8 +109,8 @@ class U_net(nn.Model):
 
         ch_in, ch_out = 3, 64
 
-        self.layers['conv0'] = nn.Conv2d(ch_in, ch_out, 7, 2)
-        self.layers['relu0'] = nn.Relu(inplace=False)
+        self.layers['conv0'] = nn.Conv2d(ch_in, ch_out, kernel_size=7, stride=2, padding=3)
+        self.layers['relu0'] = nn.ReLU(inplace=False)
         self.layers['maxpool0'] = self.maxpool()
         for layer_num in range(self.num_layers):
             ch_in = ch_out
@@ -105,8 +119,9 @@ class U_net(nn.Model):
             layer = ResNet_layer(ch_in, ch_out, 3, 2)
             self.layers['layer%i' % (layer_num + 1)] = layer
 
-        self.layers['avgpool'] = nn.AdaptiveAvgPool2d((1, 1))
-        self.layers['fc'] = nn.Linear(ch_out, self.output_size)
+        # TODO Consider deleting these two extra operations
+        #self.layers['avgpool'] = nn.AdaptiveAvgPool2d((1, 1))
+        #self.layers['fc'] = nn.Linear(ch_out, self.output_size)
 
     def forward(self, x):
         """
