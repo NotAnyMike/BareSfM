@@ -1,7 +1,7 @@
 from pdb import set_trace
 import torch
 
-from networks import ResNet_layer, U_net
+from networks import ResNet_layer, U_net, Decoder
 
 def test_ResNet_layer():
     layer = ResNet_layer(3, 64, 3, 4)
@@ -16,3 +16,12 @@ def test_U_net():
     assert len(out) == 2
     assert out[1].shape == (1, 128, int(320/4/2), int(320/4/2))
     assert out[0].shape == (1, 256, int(320/4/2/2), int(320/4/2/2))
+
+def test_decoder():
+    encoder = U_net(2)
+    decoder = Decoder(2)
+    x = torch.rand((1, 3, 320, 320))
+    set_trace()
+    x1 = encoder(x)
+    x2 = decoder(x1)
+    pass

@@ -67,12 +67,14 @@ class ResNet_layer(nn.Module):
         self.relu = lambda: nn.ReLU(inplace=False)
 
         for d in range(1, depth + 1):
-            # The last one has to have a connection before reluing
-            if d == 0:
+            if d == 1:
+                # downscale
                 self.opts['downconv%i' % d] = self.downconv(ch_in, self.ch_out)
             else:
+                # keep dims same
                 self.opts['conv%i' % d] = self.conv(ch_in, self.ch_out)
 
+            # The last one has to have a connection before reluing
             if d+1 != depth:
                 self.opts['relu%i' % d] = self.relu()
 

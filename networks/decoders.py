@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from pdb import set_trace
 
 import torch
 import torch.nn as nn
@@ -13,24 +14,27 @@ class Decoder(nn.Module):
         self.stride = 2
         self.kernel_size = 3
         self.padding = 1
+        self.dilation = 1
+        self.output_padding = 1
 
-        self.upconv = lambda c_in, c_out: nn.ConvTranspose2d(c_in, c_out,
-                kernel_size=self.kernel_size, stride=self.stride,
-                padding=self.padding, bias=False)
+        self.upconv = lambda c_in, c_out: nn.ConvTranspose2d(
+            c_in, c_out, kernel_size=self.kernel_size, dilation=self.dilation,
+            stride=self.stride, padding=self.padding,
+            output_padding=self.output_padding, bias=False)
 
-        ch_in = 64*(2**(self.num_layers + 1))
-        ch_out = int(ch_in / 2)
+        ch_in = int(64*(2**self.num_layers))
+        ch_out = ch_in // 2
 
         self.opts = OrderedDict()
         for layer_num in range(num_layers, 0, -1):
             self.opts['upconv%i' % layer_num] = self.upconv(ch_in, ch_out)
             ch_in = ch_out
-            ch_out /= 2
+            ch_out = ch_in // 2
 
-        self.opts['up_ch_conv'] = nn.ConvTranspose2d(
+        self.opts['up_ch_conv'] = nn.Conv2d(
             ch_in, ch_out, kernel_size=3, stride=1, padding=1)
-        ch_in /= 2
-        ch_out /= 2
+        ch_in //= 2
+        ch_out //= 2
         self.opts['upconv0'] = self.upconv(ch_in, ch_out)
         
     def forward(self, inputs):
@@ -40,6 +44,10 @@ class Decoder(nn.Module):
         """
         x = inputs[0]
         pointer = self.num_layers
-        for opt in self.opts:
-            pass
+        for key, opt in self.opts.items():
+            x = opt(x)
+            if pointer > 0:
+                pointer -= 1
+                x = x + inputs[-pointer]
+            x = nn.ReLU(inplace=False)(x)
         return x
