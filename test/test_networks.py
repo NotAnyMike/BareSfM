@@ -21,7 +21,7 @@ def test_decoder():
     encoder = U_net(2)
     decoder = Decoder(2)
     x = torch.rand((1, 3, 320, 320))
-    set_trace()
     x1 = encoder(x)
     x2 = decoder(x1)
-    pass
+
+    assert x2.shape == x.shape

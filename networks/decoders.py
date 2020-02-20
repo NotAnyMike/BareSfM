@@ -31,11 +31,8 @@ class Decoder(nn.Module):
             ch_in = ch_out
             ch_out = ch_in // 2
 
-        self.opts['up_ch_conv'] = nn.Conv2d(
-            ch_in, ch_out, kernel_size=3, stride=1, padding=1)
-        ch_in //= 2
-        ch_out //= 2
-        self.opts['upconv0'] = self.upconv(ch_in, ch_out)
+        self.opts['up_ch_conv'] = self.upconv(ch_in, ch_out)
+        self.opts['upconv0'] = self.upconv(ch_out, 3)
         
     def forward(self, inputs):
         """
@@ -46,7 +43,7 @@ class Decoder(nn.Module):
         pointer = self.num_layers
         for key, opt in self.opts.items():
             x = opt(x)
-            if pointer > 0:
+            if pointer > 1:
                 pointer -= 1
                 x = x + inputs[-pointer]
             x = nn.ReLU(inplace=False)(x)
