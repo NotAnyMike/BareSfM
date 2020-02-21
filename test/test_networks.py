@@ -1,7 +1,7 @@
 from pdb import set_trace
 import torch
 
-from networks import ResNet_layer, U_net, Decoder
+from networks import ResNet_layer, U_net, Decoder, Simple_pose
 
 def test_ResNet_layer():
     layer = ResNet_layer(3, 64, 3, 4)
@@ -25,3 +25,11 @@ def test_decoder():
     x2 = decoder(x1)
 
     assert x2.shape == x.shape
+
+def test_pose_networks():
+    w, h = 320, 240
+    x = torch.rand((3, 6, h, w))
+    pose = Simple_pose(h, w)
+    out = pose(x)
+    
+    assert out.shape == (3, 6)
