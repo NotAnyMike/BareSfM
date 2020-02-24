@@ -2,7 +2,9 @@ import numpy as np
 import os
 from PIL import Image
 from pdb import set_trace
+import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 def read_lines(file_path):
     with open(file_path, 'r') as f:
@@ -18,20 +20,27 @@ def parse_lines(array, dtype=int):
 
 def load_img(img_path):
     # Rotations should happen here
-    return Image.load(img_path)
+    return Image.open(img_path)
 
 
 class Shapes3D_loader(Dataset):
     def __init__(self,
+                 width, height,
                  main_folder,
                  is_train,
                  transform=None,
                  frames="abc"):
         super(Shapes3D_loader, self).__init__()
 
+        self.height = height
+        self.width = width
+        self.frames = frames
         self.main_folder = main_folder
         self.is_train = is_train
-        self.transform = transform
+        self.transform = transform # TODO not used yet
+        self.resize = transforms.Resize((self.height, self.width))
+        self.normalize = None # TODO not implemented
+        # TODO maybe adding a compose transform with a ToTensor at the end
 
         files_name = os.path.join(
             self.main_folder,
@@ -41,7 +50,7 @@ class Shapes3D_loader(Dataset):
 
         K = os.path.join(main_folder, "intrinsic.txt")
         K = parse_lines(read_lines(K), float)[0]
-        K = np.resize(np.array(K, dtype=np.float),(4,4))
+        K = np.resize(np.array(K, dtype=np.float),(4, 4))
         self.K = K
 
     def __len__(self):
@@ -53,9 +62,11 @@ class Shapes3D_loader(Dataset):
     def get_color(self, idx, frame):
         env, img = self.files[idx]
         img_path = os.path.join(self.main_folder, env, "%s_%s.jpg" % (img, frame))
-        return load_img(img_path)
+        img = load_img(img_path)
+        img = self.resize(img)
+        return img
 
-    def __get_item__(self,idx):
+    def __getitem__(self,idx):
         """
         Returns a dictionary with the follow structure:
 
@@ -66,10 +77,10 @@ class Shapes3D_loader(Dataset):
         inputs = {}
 
         for f in self.frames:
-            inputs[('color', f)] = self.get_color(idx, frame)
+            inputs[('color', f)] = self.get_color(idx, f)
 
-        K_inv = np.linalg.pinv(K)
-        inputs['K'] = torch.from_numpy(K).float()
+        K_inv = np.linalg.pinv(self.K)
+        inputs['K'] = torch.from_numpy(self.K).float()
         inputs['K'] = torch.from_numpy(K_inv).float()
 
         return inputs

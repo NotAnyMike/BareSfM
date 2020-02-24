@@ -26,7 +26,7 @@ def parser():
         default="Simple_decoder",
         help="The architecture used for the decoder network")
 
-    # config
+    # Config
     parser.add_argument(
         "--batch_size",
         type=int,
@@ -88,4 +88,4 @@ def parser():
         help="")
 
     args = parser.parse_args()
-    return vals(args)
+    return vars(args)

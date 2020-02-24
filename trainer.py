@@ -42,7 +42,7 @@ class SfM():
         # Get dataloader
         dataset_class = getattr(dataloaders, dataset_name)
         self.dataset = dataset_class(
-            main_folder=dataset_folder, is_train=True, frames=frames)
+            height=self.height, width=self.width, main_folder=dataset_folder, is_train=True, frames=frames)
         self.dataloader = DataLoader(
             self.dataset, batch_size=self.batch_size, shuffle=True,
             num_workers=self.num_workers)

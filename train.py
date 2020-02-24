@@ -1,4 +1,4 @@
-from train import train
+from trainer import SfM
 from options import parser
 
 if __name__ == '__main__':
@@ -7,4 +7,4 @@ if __name__ == '__main__':
 
     # Train
     model = SfM(**opts)
-    model.trai()
+    model.train()
