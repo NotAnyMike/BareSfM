@@ -8,11 +8,20 @@ def test_read_lines():
     assert lines == ["1 2", "3 4"]
 
 def test_shapes3d_dataloader():
-    dl = Shapes3D_loader('test', True)
-    K = np.resize(np.arange(1, 17, dtype=np.float),(4,4))
-    assert dl.files == [(1, 2), (3, 4)]
+    dl = Shapes3D_loader(320, 320, 'test', True)
+    K = np.resize(np.arange(1, 17, dtype=np.float),(4, 4))
+    assert dl.files == [('1', '2'), ('3', '4')]
     assert np.array_equal(dl.K, K)
 
 def test_parse_lines():
     correct = [(1., 2.), (2., 3., 3.,)]
-    assert parse_liness(["1 2", "2 3 3"],float) == correct
+    assert parse_lines(["1 2", "2 3 3"],float) == correct
+
+def test_reshape_transform():
+    h, w = 320, 320
+    dl = Shapes3D_loader(h, w, 'test', True)
+    assert dl[0][('color', 'a')].size == (h, w)
+
+    h, w = 100, 50
+    dl = Shapes3D_loader(h, w, 'test', True)
+    assert dl[0][('color', 'c')].size == (h, w)
