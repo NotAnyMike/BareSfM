@@ -25,7 +25,7 @@ def load_img(img_path):
 
 class Shapes3D_loader(Dataset):
     def __init__(self,
-                 width, height,
+                 height, width,
                  main_folder,
                  is_train,
                  transform=None,
@@ -40,7 +40,7 @@ class Shapes3D_loader(Dataset):
         self.transform = transform # TODO not used yet
         self.resize = transforms.Resize((self.height, self.width))
         self.normalize = None # TODO not implemented
-        # TODO maybe adding a compose transform with a ToTensor at the end
+        self.transforms = transforms.Compose([self.resize, transforms.ToTensor()])
 
         files_name = os.path.join(
             self.main_folder,
@@ -59,11 +59,11 @@ class Shapes3D_loader(Dataset):
     def get_depth(self, idx, frame):
         raise NotImplementedError
 
-    def get_color(self, idx, frame):
+    def get_color(self, idx, frame, transform):
         env, img = self.files[idx]
         img_path = os.path.join(self.main_folder, env, "%s_%s.jpg" % (img, frame))
         img = load_img(img_path)
-        img = self.resize(img)
+        img = transform(img)
         return img
 
     def __getitem__(self,idx):
@@ -76,8 +76,9 @@ class Shapes3D_loader(Dataset):
         """
         inputs = {}
 
+        transforms = self.transforms
         for f in self.frames:
-            inputs[('color', f)] = self.get_color(idx, f)
+            inputs[('color', f)] = self.get_color(idx, f, transforms)
 
         K_inv = np.linalg.pinv(self.K)
         inputs['K'] = torch.from_numpy(self.K).float()

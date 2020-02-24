@@ -17,11 +17,11 @@ def test_parse_lines():
     correct = [(1., 2.), (2., 3., 3.,)]
     assert parse_lines(["1 2", "2 3 3"],float) == correct
 
-def test_reshape_transform():
+def test_reshape_and_totensor_transform():
     h, w = 320, 320
     dl = Shapes3D_loader(h, w, 'test', True)
-    assert dl[0][('color', 'a')].size == (h, w)
+    assert dl[0][('color', 'a')].shape == (3, h, w)
 
     h, w = 100, 50
     dl = Shapes3D_loader(h, w, 'test', True)
-    assert dl[0][('color', 'c')].size == (h, w)
+    assert dl[0][('color', 'c')].shape == (3, h, w)
