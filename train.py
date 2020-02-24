@@ -1,9 +1,10 @@
 from train import train
-from options import args
+from options import parser
 
 if __name__ == '__main__':
     # Get parameters
-    opts = args()
+    opts = parser()
 
     # Train
-    train(**opts)
+    model = SfM(**opts)
+    model.trai()
