@@ -1,6 +1,9 @@
-from torch.utils.data import DataLoader
+import itertools
+from pdb import set_trace
+import torch
 from torch import nn
 from torch import optim
+from torch.utils.data import DataLoader
 
 import networks
 import dataloaders
@@ -24,6 +27,11 @@ class SfM():
         self.beta1 = beta1
         self.beta2 = beta2
 
+        self.device = torch.device('cpu')
+        if torch.cuda_is_available():
+            self.device = torch.device('cuda')
+        # TODO use to(device) it is not used so far
+
         # Get networks
         pose_class = getattr(networks, pose_network)
         encoder_class = getattr(networks, encoder_network)
@@ -32,12 +40,13 @@ class SfM():
         # Initialize networks
         self.decoder_ntw = decoder_class()
         self.encoder_ntw = encoder_class()
+        self.depth = nn.Sequential(self.encoder_ntw, self.decoder_ntw)
         self.pose_ntw = pose_class(height=self.height,
                                    width=self.width)
-        self.params = []
-        self.params.append(self.decoder_ntw.parameters())
-        self.params.append(self.encoder_ntw.parameters())
-        self.params.append(self.pose_ntw.parameters())
+        self.params = itertools.chain(
+            self.decoder_ntw.parameters(),
+            self.encoder_ntw.parameters(),
+            self.pose_ntw.parameters())
 
         # Get dataloader
         dataset_class = getattr(dataloaders, dataset_name)
@@ -56,5 +65,13 @@ class SfM():
         for epoch in range(self.num_epochs):
             for batch_num, batch in enumerate(self.dataloader):
                 self.optimizer.zero_grad()
+                depth_a = self.depth(batch[('color', 'a')]) # TODO Check if it is a or b
+
+                ab = torch.cat((batch[('color', 'a')], batch[('color', 'b')]), 1)
+                pose_ab = self.pose_ntw(ab)
                 # TODO 
                 # TODO test inputs are valid for networks
+
+                if batch_num > 0:
+                    break
+            if epoch > 2: break
