@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Decoder(nn.Module):
+class Simple_decoder(nn.Module):
     """ num_layers: the number of layers """
     def __init__(self, num_layers=4):
-        super(Decoder, self).__init__()
+        super(Simple_decoder, self).__init__()
         self.num_layers = num_layers
 
         self.stride = 2
@@ -32,7 +32,7 @@ class Decoder(nn.Module):
             ch_out = ch_in // 2
 
         self.opts['up_ch_conv'] = self.upconv(ch_in, ch_out)
-        self.opts['upconv0'] = self.upconv(ch_out, 3)
+        self.opts['upconv0'] = self.upconv(ch_out, 1)
         
     def forward(self, inputs):
         """

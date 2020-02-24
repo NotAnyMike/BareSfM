@@ -4,14 +4,14 @@ import torch
 import torch.nn as nn
 
 class Simple_pose(nn.Module):
-    """ Simple conv networkd """
+    """ Simple conv network """
     def __init__(self, height, width, num_layers=4):
         super(Simple_pose, self).__init__()
 
         assert height % 2 == 0
         assert width % 2 == 0
-        assert height % (2**num_layers) == 0 
-        assert width  % (2**num_layers) == 0 
+        assert height % (2**num_layers) == 0
+        assert width  % (2**num_layers) == 0
 
         self.width = width
         self.height = height
