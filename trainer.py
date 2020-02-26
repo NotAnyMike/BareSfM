@@ -56,6 +56,7 @@ class SfM():
             self.dataset, batch_size=self.batch_size, shuffle=True,
             num_workers=self.num_workers)
 
+        # TODO Structural similarity loss (SSIM) is implemented on pytorchgeometry/kornia
         self.l1_loss = nn.L1Loss(reduction="mean") # TODO
         self.optimizer = optim.Adam(self.params, # TODO
                                     lr=self.lr,
