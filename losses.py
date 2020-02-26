@@ -37,17 +37,17 @@ def projection(img, z, pose, K, K_inv):
     for batch in range(batch_size): # TODO can be made better using system map
         x = proj[batch, :, 0]
         y = proj[batch, :, 1]
-        imgs.append(bilinear_interpolation(x, y, img[batch]).view(1, height, width, 3))
+        imgs.append(bilinear_interpolation(x, y, img[batch]).view(1, 3, height, width))
 
     imgs = torch.cat(imgs, 0) # adding into a batch
-    imgs = imgs.permute(0, 3, 1, 2) # formatting as BCHW
 
     return imgs
 
 def bilinear_interpolation(x, y, img):
     """
     Computes the bilinear interpolation for x and y.
-    x,y should be a flatten non-batch vector. img is a non-batch img
+    x,y should be a flatten non-batch vector. img is a non-batch img.
+    Keep in mind that x is width here
     """
     _, height, width = img.shape
     x_min = x.int()
@@ -78,6 +78,7 @@ def bilinear_interpolation(x, y, img):
             w3 * img[:, y_min.long() + 1, x_min.long() + 1] + \
             w4 * img[:, y_min.long() + 1, x_min.long()]
 
+    pix = pix.view(img.shape)
     return pix
 
 def get_extrinsic_matrix(pose):
