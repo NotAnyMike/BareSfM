@@ -1,4 +1,6 @@
 import torch
+import torch.nn.functional as F
+
 from pdb import set_trace
 
 def projection(img, z, pose, K, K_inv):
@@ -32,14 +34,10 @@ def projection(img, z, pose, K, K_inv):
     proj = K @ pose @ world_coords
     proj = proj / proj[:, :, 2:3, :] # Dividing by z
 
-    # TODO project the pixels from one image to the new one defined by proj
-    imgs = []
-    for batch in range(batch_size): # TODO can be made better using system map
-        x = proj[batch, :, 0]
-        y = proj[batch, :, 1]
-        imgs.append(bilinear_interpolation(x, y, img[batch]).view(1, 3, height, width))
+    grid = proj.view(batch_size, height, width, 4)[:, :, :, :2]
+    grid = 2 * grid / torch.Tensor([width, height]) - 1.0
 
-    imgs = torch.cat(imgs, 0) # adding into a batch
+    imgs = F.grid_sample(img, grid, mode='bilinear', padding_mode='zeros')
 
     return imgs
 
@@ -86,4 +84,6 @@ def get_extrinsic_matrix(pose):
     Returns the rotation matrix representation of the
     rotations and translations from pose.
     """
-    return torch.rand((12, 4, 4)) # TODO remove this
+    batch_size,_ = pose.shape
+    identity = torch.eye(4).view(1,4,4).repeat(batch_size, 1, 1)
+    return identity # TODO remove this

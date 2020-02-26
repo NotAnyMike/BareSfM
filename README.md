@@ -4,4 +4,4 @@ This is an implementation using pytorch of the basic approach of Structure from 
 
 ## Tests
 
-Run `py.test -v test/tests.py`
+Run `py.test -s -v`

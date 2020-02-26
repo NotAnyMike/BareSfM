@@ -17,7 +17,9 @@ def test_projection():
     K = dl.K.view(1, 4, 4).repeat(batch_size, 1, 1)
     K_inv = dl.K_inv.view(1, 4, 4).repeat(batch_size, 1, 1)
 
-    projection(img, depth, pose, K, K_inv)
+    proj = projection(img, depth, pose, K, K_inv)
+
+    assert proj.shape == img.shape
     # TODO
     pass
 
@@ -51,8 +53,8 @@ def test_bilinear_interpolation():
     wrong2 = (torch.abs(img - img3) > 0.1).sum().float() / (height*width*3)
 
     print("\n")
-    print("Only %0.2f%% pixels 'significantly' different using OWN method" % wrong1)
-    print("Only %0.2f%% pixels 'significantly' different using PYTORCH method" % wrong2)
+    print("Only %0.2f%% pixels 'significantly' different using OWN method" % (wrong1 * 100))
+    print("Only %0.2f%% pixels 'significantly' different using PYTORCH method" % (wrong2 * 100))
     print("\n")
 
     if wrong1 > 0.05 or wrong2 > 0.05:
