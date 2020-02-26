@@ -51,7 +51,9 @@ class Shapes3D_loader(Dataset):
         K = os.path.join(main_folder, "intrinsic.txt")
         K = parse_lines(read_lines(K), float)[0]
         K = np.resize(np.array(K, dtype=np.float),(4, 4))
-        self.K = K
+        K_inv = np.linalg.pinv(K)
+        self.K = torch.from_numpy(K).float()
+        self.K_inv = torch.from_numpy(K_inv).float()
 
     def __len__(self):
         return len(self.files)
@@ -66,7 +68,7 @@ class Shapes3D_loader(Dataset):
         img = transform(img)
         return img
 
-    def __getitem__(self,idx):
+    def __getitem__(self, idx):
         """
         Returns a dictionary with the follow structure:
 
@@ -80,8 +82,7 @@ class Shapes3D_loader(Dataset):
         for f in self.frames:
             inputs[('color', f)] = self.get_color(idx, f, transforms)
 
-        K_inv = np.linalg.pinv(self.K)
-        inputs['K'] = torch.from_numpy(self.K).float()
-        inputs['K'] = torch.from_numpy(K_inv).float()
+        inputs['K'] = self.K 
+        inputs['K_inv'] = self.K_inv
 
         return inputs
