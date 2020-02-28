@@ -10,7 +10,7 @@ from dataloaders import Shapes3D_loader
 def test_projection():
     batch_size = 12
     h, w = 280, 320
-    dl = Shapes3D_loader(h, w, 'test', True)
+    dl = Shapes3D_loader(h, w, 'test/test_dataset', True)
     img = torch.rand((batch_size, 3, h, w))
     depth = torch.rand((batch_size, 1, h, w))
     pose = torch.rand((batch_size, 6))
@@ -20,8 +20,6 @@ def test_projection():
     proj = projection(img, depth, pose, K, K_inv)
 
     assert proj.shape == img.shape
-    # TODO
-    pass
 
 def test_bilinear_interpolation():
     """
@@ -30,7 +28,7 @@ def test_bilinear_interpolation():
     This is made for pytorch bilinear interpolation function and our own.
     """
     height, width = 280, 320
-    dl = Shapes3D_loader(height, width, 'test', True)
+    dl = Shapes3D_loader(height, width, 'test/test_dataset', True)
 
     img = dl[0][('color', 'a')]
 

@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from pytorch3d import transforms 
 
 from pdb import set_trace
 
@@ -84,11 +85,11 @@ def get_extrinsic_matrix(pose):
     Returns the rotation matrix representation of the
     rotations and translations from pose.
     """
+    batch_size, _ = pose.shape
     rot = pose[:,:3]
     trans = pose[:,3:]
 
-    set_trace()
+    rot = transforms.euler_angles_to_matrix(rot,convention="XYZ")
+    pose = torch.cat((rot,trans.view(batch_size, 3, 1)), -1)
 
-    batch_size,_ = pose.shape
-    identity = torch.eye(4).view(1,4,4).repeat(batch_size, 1, 1)
-    return identity # TODO remove this
+    return pose
