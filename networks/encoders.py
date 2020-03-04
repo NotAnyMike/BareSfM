@@ -50,7 +50,7 @@ class ResNet_layer(nn.Module):
         self.stride = 2
         self.padding = 1
         self.dilation = 1
-        self.opts = OrderedDict()
+        self.opts = OrderedDict()#in.ModuleDict()
 
         self.downconv = lambda c_in, c_out: nn.Conv2d(
             c_in, c_out,
@@ -104,7 +104,7 @@ class U_net(nn.Module):
         self.num_layers = num_layers
 
         # few layers following ResNet 18
-        self.layers = OrderedDict()
+        self.layers = nn.ModuleDict()
 
         self.maxpool = lambda: nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
@@ -127,7 +127,7 @@ class U_net(nn.Module):
     def forward(self, x):
         """
         Returns self.num_layers outputs 
-        From last to first. THe first element returned is the last layer.
+        From last to first. The first element returned is the last layer.
         """
         outputs = []
         for key, opt in self.layers.items():

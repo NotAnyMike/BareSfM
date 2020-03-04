@@ -29,6 +29,7 @@ class Shapes3D_loader(Dataset):
                  main_folder,
                  is_train,
                  transform=None,
+                 K_dim=(4,4),
                  frames="abc"):
         super(Shapes3D_loader, self).__init__()
 
@@ -41,6 +42,7 @@ class Shapes3D_loader(Dataset):
         self.resize = transforms.Resize((self.height, self.width))
         self.normalize = None # TODO not implemented
         self.transforms = transforms.Compose([self.resize, transforms.ToTensor()])
+        self.K_dim = K_dim
 
         files_name = os.path.join(
             self.main_folder,
@@ -48,9 +50,18 @@ class Shapes3D_loader(Dataset):
 
         self.files = parse_lines(read_lines(files_name), str)
 
-        K = os.path.join(main_folder, "intrinsic.txt")
+        K = os.path.join(main_folder, "intrinsic_matrix.txt")
         K = parse_lines(read_lines(K), float)[0]
         K = np.resize(np.array(K, dtype=np.float),(4, 4))
+
+        if self.K_dim == (3,3):
+            K = K[[0,1,3],:3]
+            K[2,2] = 1.0
+        elif self.K_dim == (4,4):
+            pass
+        else:
+            raise AttributeError("K_dim has an invalid dimension")
+
         K_inv = np.linalg.pinv(K)
         self.K = torch.from_numpy(K).float()
         self.K_inv = torch.from_numpy(K_inv).float()

@@ -4,19 +4,20 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
 
-from losses import projection, bilinear_interpolation
+from operations import Projection, bilinear_interpolation
 from dataloaders import Shapes3D_loader
 
 def test_projection():
     batch_size = 12
     h, w = 280, 320
-    dl = Shapes3D_loader(h, w, 'test/test_dataset', True)
+    dl = Shapes3D_loader(h, w, 'test/test_dataset', True, K_dim=(3,3))
     img = torch.rand((batch_size, 3, h, w))
     depth = torch.rand((batch_size, 1, h, w))
     pose = torch.rand((batch_size, 6))
-    K = dl.K.view(1, 4, 4).repeat(batch_size, 1, 1)
-    K_inv = dl.K_inv.view(1, 4, 4).repeat(batch_size, 1, 1)
+    K = dl.K.view(1, 3, 3).repeat(batch_size, 1, 1)
+    K_inv = dl.K_inv.view(1, 3, 3).repeat(batch_size, 1, 1)
 
+    projection = Projection(h, w, batch_size)
     proj = projection(img, depth, pose, K, K_inv)
 
     assert proj.shape == img.shape

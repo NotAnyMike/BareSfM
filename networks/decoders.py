@@ -25,7 +25,7 @@ class Simple_decoder(nn.Module):
         ch_in = int(64*(2**self.num_layers))
         ch_out = ch_in // 2
 
-        self.opts = OrderedDict()
+        self.opts = nn.ModuleDict()
         for layer_num in range(num_layers, 0, -1):
             self.opts['upconv%i' % layer_num] = self.upconv(ch_in, ch_out)
             ch_in = ch_out
