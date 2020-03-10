@@ -6,35 +6,37 @@ from pytorch3d import transforms
 from pdb import set_trace
 
 class Projection(nn.Module):
-    def __init__(self, height, width, batch_size):
+    def __init__(self, *, height, width, batch_size):
         super(Projection, self).__init__()
 
         self.height = height
         self.width = width
         self.batch_size = batch_size
 
-        self.x = torch.arange(0, self.width, 1, requires_grad=False)
-        self.y = torch.arange(0, self.height, 1, requires_grad=False)
-        self.x, self.y = torch.meshgrid(self.x, self.y)
-        self.x = self.x.repeat(batch_size, 1, 1)
-        self.y = self.y.repeat(batch_size, 1, 1)
+        x = torch.arange(0.0, self.width, 1.0, requires_grad=False)
+        y = torch.arange(0.0, self.height, 1.0, requires_grad=False)
+        x, y = torch.meshgrid(x, y)
+        x = x.repeat(batch_size, 1, 1)
+        y = y.repeat(batch_size, 1, 1)
 
-        self.x = torch.flatten(self.x, 0).view(1, -1, 1)
-        self.y = torch.flatten(self.y, 0).view(1, -1, 1)
+        self.x = nn.Parameter(torch.flatten(x, 0).view(self.batch_size, -1, 1))
+        self.y = nn.Parameter(torch.flatten(y, 0).view(self.batch_size, -1, 1))
 
-        self.Rt_identity_inv = torch.eye(4,3, requires_grad=False)
-        self.epsilon = 1e-7
+        self.Rt_identity_inv = nn.Parameter(torch.eye(4, 3, requires_grad=False).float())
+        self.epsilon = nn.Parameter(torch.tensor([1e-7], requires_grad=False))
+        self.dims_parameter = nn.Parameter(torch.tensor([self.width, self.height]).float())
+        self.one = nn.Parameter(torch.tensor([1.0]))
 
     def forward(self, img, z, pose, K, K_inv):
         z = torch.flatten(z, 2).view(self.batch_size, -1, 1)
 
-        self.x = self.x * z
-        self.y = self.y * z
+        x = self.x * z
+        y = self.y * z
 
-        pos = torch.cat([self.x, self.y, z], -1).view(self.batch_size, -1, 3, 1)
+        pos = torch.cat([x, y, z], -1).view(self.batch_size, -1, 3, 1)
 
-        K_inv = K_inv.view(self.batch_size, 1, 3, 3).expand(-1, int(self.height * self.width), -1, -1)
-        K = K.view(self.batch_size, 1, 3, 3).expand(-1, int(self.height * self.width), -1, -1)
+        #K_inv = K_inv.view(self.batch_size, 1, 3, 3).expand(-1, int(self.height * self.width), -1, -1)
+        #K = K.view(self.batch_size, 1, 3, 3).expand(-1, int(self.height * self.width), -1, -1)
 
         # Convert 6DoF to Rotation and translation matrix
         pose = get_extrinsic_matrix(pose)
@@ -45,7 +47,7 @@ class Projection(nn.Module):
         proj = proj / (proj[:, :, 2:3, :] + self.epsilon) # Dividing by z
 
         grid = proj.view(self.batch_size, self.height, self.width, 3)[:, :, :, :2]
-        grid = 2 * grid / torch.Tensor([self.width, self.height]) - 1.0
+        grid = 2 * grid / self.dims_parameter - self.one
 
         imgs = F.grid_sample(img, grid, mode='bilinear', padding_mode='zeros')
 

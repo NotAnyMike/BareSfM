@@ -67,6 +67,10 @@ def parser():
         type=float,
         default=0.999,
         help="")
+    parser.add_argument(
+        "--no_gpu",
+        action="store_true",
+        help="Use only CPU if flag is passed")
 
     # Dataset
     parser.add_argument(
@@ -86,6 +90,28 @@ def parser():
         default=['a', 'b', 'c'],
         nargs=3,
         help="")
+
+    # Loggin and saving
+    parser.add_argument(
+        "--log_frequency",
+        type=int,
+        default=250,
+        help="Number of batches between each log")
+    parser.add_argument(
+        "--save_frequency",
+        type=int,
+        default=1,
+        help="Number of epochs between each save")
+    parser.add_argument(
+        "--model_name",
+        default="unnamed_model",
+        type=str,
+        help="Name of the model for logging purposes")
+    parser.add_argument(
+        "--save_folder",
+        type=str,
+        default=".",
+        help="Folder where to save and log the model")
 
     args = parser.parse_args()
     return vars(args)

@@ -16,8 +16,10 @@ def test_projection():
     pose = torch.rand((batch_size, 6))
     K = dl.K.view(1, 3, 3).repeat(batch_size, 1, 1)
     K_inv = dl.K_inv.view(1, 3, 3).repeat(batch_size, 1, 1)
+    K = K.view(batch_size, 1, 3, 3).expand(-1, int(h*w), -1, -1)
+    K_inv = K_inv.view(batch_size, 1, 3, 3).expand(-1, int(h*w), -1, -1)
 
-    projection = Projection(h, w, batch_size)
+    projection = Projection(height=h, width=w, batch_size=batch_size)
     proj = projection(img, depth, pose, K, K_inv)
 
     assert proj.shape == img.shape
