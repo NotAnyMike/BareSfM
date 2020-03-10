@@ -14,6 +14,6 @@ Run
 
 for example. For more information run `python train.py --help` or see `options.py` for all the possible configurations.
 
-## Tests
+# Tests
 
 Run `py.test -s -v`
